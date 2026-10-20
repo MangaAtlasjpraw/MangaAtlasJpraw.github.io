@@ -9,7 +9,7 @@
     host.dataset.countStarted='1';
     var safe=slug.toLowerCase().replace(/[^a-z0-9_-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,180);
     if(!safe) return;
-    var url='https://api.counterapi.dev/v1/mangaatlas-chapters/chapter-'+encodeURIComponent(safe)+'/MangaAtlasJpraw.github.io/up';
+    var url='https://api.counterapi.dev/v1/mangaatlas-chapters/chapter-'+encodeURIComponent(safe)+'/up';
     fetch(url,{method:'GET',cache:'no-store'})
       .then(function(r){if(!r.ok)throw new Error('counter '+r.status);return r.json();})
       .then(function(result){
