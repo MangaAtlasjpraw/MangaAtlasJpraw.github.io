@@ -3,9 +3,9 @@
   'use strict';
   if (window.__mangaAtlasAdsSystemLoaded) return;
   window.__mangaAtlasAdsSystemLoaded = true;
-  if (location.pathname.indexOf('/MangaAtlasJpraw.github.io/admin') === 0) return;
+  if (location.pathname.indexOf('/admin') === 0) return;
 
-  fetch('/MangaAtlasJpraw.github.io/data/ads-config.json?v=' + Date.now(), { cache: 'no-store' })
+  fetch('/data/ads-config.json?v=' + Date.now(), { cache: 'no-store' })
     .then(function (response) {
       if (!response.ok) throw new Error('Ads config HTTP ' + response.status);
       return response.json();
