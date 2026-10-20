@@ -8,8 +8,8 @@
  const unwrap=d=>{if(d&&typeof d.content==='string'){try{return JSON.parse(d.content)}catch(e){return {}}}return d&&typeof d==='object'?d:{}};
  try{
   const [content,manual]=await Promise.all([
-   fetch('/MangaAtlasJpraw.github.io/data/content.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})),
-   fetch('/MangaAtlasJpraw.github.io/data/manual-chapters.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({}))
+   fetch('/data/content.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})),
+   fetch('/data/manual-chapters.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({}))
   ]);
   const cd=unwrap(content),md=unwrap(manual); const rows=[]; const seen=new Set();
   const add=(c,source,index)=>{if(!c?.slug)return;const k=String(c.slug).toLowerCase();if(seen.has(k))return;seen.add(k);rows.push({c,source,index})};
@@ -19,8 +19,8 @@
   rows.sort((a,b)=>timeOf(b.c)-timeOf(a.c)||b.source-a.source||Number(b.c.number||0)-Number(a.c.number||0)||b.index-a.index);
   const latestByManga=new Map(); for(const row of rows){const k=id(row.c);if(k&&!latestByManga.has(k))latestByManga.set(k,row.c)}
   const latest=[...latestByManga.values()].slice(0,6);
-  root.innerHTML='<div class="ma-latest-shell"><div class="ma-latest-head"><div><div class="ma-latest-kicker">LATEST ACTIVITY</div><h2>Latest Chapters</h2><p>Only the newest chapter from each manga appears here.</p></div><a href="/MangaAtlasJpraw.github.io/latest-chapters.html">View all chapters →</a></div><div class="ma-latest-grid"></div></div>';
-  const grid=root.querySelector('.ma-latest-grid'); latest.forEach((c,i)=>{const cover=c.cover||c.cover_url||'';const title=c.title||c.name||'Latest Chapter';const series=c.mangaTitle||c.manga||c.series||c.mangaId||'Manga';const number=c.number??'';const a=document.createElement('a');a.className='ma-latest-card';a.href='/MangaAtlasJpraw.github.io/chapter.html?slug='+encodeURIComponent(c.slug);a.innerHTML=(cover?'<img src="'+esc(cover.startsWith('http')?cover:GH+cover)+'" alt="'+esc(series)+' manga cover" loading="'+(i<2?'eager':'lazy')+'">':'<div></div>')+'<div class="ma-latest-copy"><span class="ma-latest-badge">NEW / UPDATED</span><h3>'+esc(title)+'</h3><p>'+esc(series)+(number!==''?' · Chapter '+esc(number):'')+'</p><span class="ma-latest-link">Read Chapter →</span></div>';grid.appendChild(a)});
+  root.innerHTML='<div class="ma-latest-shell"><div class="ma-latest-head"><div><div class="ma-latest-kicker">LATEST ACTIVITY</div><h2>Latest Chapters</h2><p>Only the newest chapter from each manga appears here.</p></div><a href="/latest-chapters.html">View all chapters →</a></div><div class="ma-latest-grid"></div></div>';
+  const grid=root.querySelector('.ma-latest-grid'); latest.forEach((c,i)=>{const cover=c.cover||c.cover_url||'';const title=c.title||c.name||'Latest Chapter';const series=c.mangaTitle||c.manga||c.series||c.mangaId||'Manga';const number=c.number??'';const a=document.createElement('a');a.className='ma-latest-card';a.href='/chapter.html?slug='+encodeURIComponent(c.slug);a.innerHTML=(cover?'<img src="'+esc(cover.startsWith('http')?cover:GH+cover)+'" alt="'+esc(series)+' manga cover" loading="'+(i<2?'eager':'lazy')+'">':'<div></div>')+'<div class="ma-latest-copy"><span class="ma-latest-badge">NEW / UPDATED</span><h3>'+esc(title)+'</h3><p>'+esc(series)+(number!==''?' · Chapter '+esc(number):'')+'</p><span class="ma-latest-link">Read Chapter →</span></div>';grid.appendChild(a)});
   app.parentNode.insertBefore(root,app);
  }catch(e){console.warn('Latest Chapters System unavailable',e)}
 })();
