@@ -1,0 +1,22 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/MangaAtlasJpraw.github.io/sitemap.xml", "destination": "/MangaAtlasJpraw.github.io/api/sitemap" },
+    { "source": "/MangaAtlasJpraw.github.io/japan", "destination": "/MangaAtlasJpraw.github.io/country.html?country=JP" },
+    { "source": "/MangaAtlasJpraw.github.io/usa", "destination": "/MangaAtlasJpraw.github.io/country.html?country=US" },
+    { "source": "/MangaAtlasJpraw.github.io/france", "destination": "/MangaAtlasJpraw.github.io/country.html?country=FR" },
+    { "source": "/MangaAtlasJpraw.github.io/brazil", "destination": "/MangaAtlasJpraw.github.io/country.html?country=BR" },
+    { "source": "/MangaAtlasJpraw.github.io/manga/:slug", "destination": "/MangaAtlasJpraw.github.io/manga.html?slug=:slug" },
+    { "source": "/MangaAtlasJpraw.github.io/chapter/:slug", "destination": "/MangaAtlasJpraw.github.io/chapter.html?slug=:slug" },
+    { "source": "/:slug", "destination": "/MangaAtlasJpraw.github.io/chapter.html?slug=:slug" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ]
+}
