@@ -1,11 +1,11 @@
 /* JPMangaatlas SEO System — isolated metadata/canonical/structured-data layer. */
 (async()=>{
-  if(location.pathname.startsWith('/MangaAtlasJpraw.github.io/admin')) return;
+  if(location.pathname.startsWith('/admin')) return;
   if(document.documentElement.dataset.mangaAtlasSeo==='ready') return;
   document.documentElement.dataset.mangaAtlasSeo='ready';
 
   const esc=v=>String(v??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]));
-  const base='https://mangaatlasjpraw.github.io/MangaAtlasJpraw.github.io';
+  const base='https://mangaatlasjpraw.github.io';
   const upsert=(selector,attrs)=>{
     let el=document.head.querySelector(selector);
     if(!el){el=document.createElement('meta');document.head.appendChild(el)}
@@ -32,11 +32,11 @@
     const params=new URLSearchParams(location.search);
     const slug=params.get('slug');
 
-    if(path==='/MangaAtlasJpraw.github.io/chapter.html'||path==='/MangaAtlasJpraw.github.io/chapter'){
+    if(path==='/chapter.html'||path==='/chapter'){
       if(!slug) return;
       const [content,manual]=await Promise.all([
-        fetch('/MangaAtlasJpraw.github.io/data/content.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})),
-        fetch('/MangaAtlasJpraw.github.io/data/manual-chapters.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({}))
+        fetch('/data/content.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({})),
+        fetch('/data/manual-chapters.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({}))
       ]);
       const rows=[...(content.chapters||[]),...(manual.chapters||[])];
       const c=rows.find(x=>String(x.slug||'')===String(slug));
@@ -46,7 +46,7 @@
       const number=c.number!=null?String(c.number):'';
       const seoTitle=(title+' | JPMangaatlas').slice(0,70);
       const desc=(number?series+' chapter '+number+' raw release. ':'')+'Read '+title+' on JPMangaatlas.';
-      const url=base+'/MangaAtlasJpraw.github.io/chapter.html?slug='+encodeURIComponent(slug);
+      const url=base+'/chapter.html?slug='+encodeURIComponent(slug);
       const pages=Array.isArray(c.pages)?c.pages:[];
       const image=pages.length?String(pages[0]):'';
       document.title=seoTitle;
@@ -84,9 +84,9 @@
       return;
     }
 
-    if(path==='/MangaAtlasJpraw.github.io/latest-chapters.html'){
-      canonical(base+'/MangaAtlasJpraw.github.io/latest-chapters.html');
-      jsonLd({'@context':'https://schema.org','@type':'CollectionPage',name:'Latest Manga Chapters & Raw Releases | JPMangaatlas',url:base+'/MangaAtlasJpraw.github.io/latest-chapters.html',isPartOf:{'@type':'WebSite',name:'JPMangaatlas',url:base+'/'}});
+    if(path==='/latest-chapters.html'){
+      canonical(base+'/latest-chapters.html');
+      jsonLd({'@context':'https://schema.org','@type':'CollectionPage',name:'Latest Manga Chapters & Raw Releases | JPMangaatlas',url:base+'/latest-chapters.html',isPartOf:{'@type':'WebSite',name:'JPMangaatlas',url:base+'/'}});
     }
   }catch(e){console.warn('JPMangaatlas SEO System unavailable',e)}
 })();
