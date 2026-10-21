@@ -1,42 +1,33 @@
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 
-const SITE = 'https://mangaatlas.github.io';
-const SUPABASE_URL = 'https://vcrrkyqiunczhpxdcoil.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_IWiCOqUZ7PtPaISAo_5RDw_9uTvyD4z';
-
-async function fetchRows(path) {
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-  });
-  if (!response.ok) throw new Error(`Supabase request failed: ${response.status}`);
-  return response.json();
-}
-
+const SITE = 'https://mangaatlasjpraw.github.io';
+const STATIC_CHAPTERS = new Set([
+  'kingdom-raw-jap-891', 'kingdom-eng-891',
+  'one-piece-jap-raw-1196', 'one-piece-eng-raw-1196',
+  'days-raw-279-jap', 'Kagurabacjp-raw-jp-135',
+  'Kagurabacjp-raw-eng-135', 'days-raw-279',
+  'days-raw-jap-280', 'one-piece-jap-raw-1197'
+]);
+const ALIASES = {
+  'kingdom-raw-engraw-891': 'kingdom-eng-891',
+  'one-piece-raw-jap-1196': 'one-piece-jap-raw-1196',
+  'one-piece-raw-eng-1196': 'one-piece-eng-raw-1196',
+  'one-piece-raw-jap-1197': 'one-piece-jap-raw-1197'
+};
+const manual = JSON.parse(await readFile('data/manual-chapters.json', 'utf8'));
+const content = JSON.parse(await readFile('data/content.json', 'utf8'));
 const urls = new Map();
-const add = (loc, lastmod) => urls.set(loc, lastmod ? new Date(lastmod).toISOString() : '');
-
-add(`${SITE}/`);
-for (const country of ['JP', 'US', 'FR', 'BR']) add(`${SITE}/country.html?country=${country}`);
-add(`${SITE}/blog.html`);
-add(`${SITE}/japan-blog.html`);
-add(`${SITE}/france-blog.html`);
-
-// Keep sitemap URLs identical to the canonical URLs declared by manga/chapter pages.
-const manga = await fetchRows('manga?select=slug,updated_at&slug=not.is.null&order=slug');
-for (const item of manga) add(`${SITE}/manga/${encodeURIComponent(item.slug)}`, item.updated_at);
-
-// Chapter pages are served by chapter.html with the slug query parameter.
-// Keep sitemap URLs identical to the real public chapter URLs.
-const chapters = await fetchRows('chapters?select=url_slug,created_at,updated_at&url_slug=not.is.null&order=updated_at.desc');
-for (const item of chapters) add(`${SITE}/chapter.html?slug=${encodeURIComponent(item.url_slug)}`, item.updated_at || item.created_at);
-
-const escapeXml = value => String(value)
-  .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
-  .replaceAll('"', '&quot;').replaceAll("'", '&apos;');
-
-const body = [...urls].map(([loc, lastmod]) =>
-  `  <url><loc>${escapeXml(loc)}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}</url>`
-).join('\n');
-
-await writeFile('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`);
-console.log(`Generated sitemap with ${urls.size} URLs.`);
+const add = (loc, lastmod = '') => { if (!urls.has(loc)) urls.set(loc, lastmod ? new Date(lastmod).toISOString().slice(0, 10) : ''); };
+for (const path of ['/', '/latest-chapters.html', '/manga.html', '/country.html', '/blog.html', '/japan-blog.html', '/france-blog.html']) add(SITE + path);
+for (const chapter of [...(manual.chapters || []), ...(content.chapters || [])]) {
+  if (!chapter?.slug) continue;
+  const normalized = ALIASES[chapter.slug] || chapter.slug;
+  const loc = STATIC_CHAPTERS.has(normalized)
+    ? `${SITE}/chapter/${normalized}/`
+    : `${SITE}/chapter.html?slug=${encodeURIComponent(chapter.slug)}`;
+  add(loc, chapter.updatedAt || chapter.updated_at || chapter.createdAt || chapter.created_at || '');
+}
+const escapeXml = value => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');
+const body = [...urls].map(([loc, lastmod]) => `  <url><loc>${escapeXml(loc)}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}</url>`).join('\\n');
+await writeFile('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\\n${body}\\n</urlset>\\n`);
+console.log(`Generated sitemap with ${urls.size} canonical URLs.`);
