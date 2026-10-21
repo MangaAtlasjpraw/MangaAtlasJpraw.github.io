@@ -17,7 +17,7 @@ const ALIASES = {
 const manual = JSON.parse(await readFile('data/manual-chapters.json', 'utf8'));
 const content = JSON.parse(await readFile('data/content.json', 'utf8'));
 const urls = new Map();
-const add = (loc, lastmod = '') => { if (!urls.has(loc)) urls.set(loc, lastmod ? new Date(lastmod).toISOString().slice(0, 10) : ''); };
+const add = (loc, lastmod = '') => { const date = lastmod ? new Date(lastmod).toISOString().slice(0, 10) : ''; const previous = urls.get(loc) || ''; if (!previous || (date && date > previous)) urls.set(loc, date || previous); };
 for (const path of ['/', '/latest-chapters.html', '/manga.html', '/country.html', '/blog.html', '/japan-blog.html', '/france-blog.html']) add(SITE + path);
 for (const chapter of [...(manual.chapters || []), ...(content.chapters || [])]) {
   if (!chapter?.slug) continue;
