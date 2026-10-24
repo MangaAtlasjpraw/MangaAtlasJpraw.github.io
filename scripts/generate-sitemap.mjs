@@ -14,6 +14,7 @@ const ALIASES = {
   'one-piece-raw-eng-1196': 'one-piece-eng-raw-1196',
   'one-piece-raw-jap-1197': 'one-piece-jap-raw-1197'
 };
+// One Piece ENG 1197 intentionally uses the chapter.html?slug= URL, matching its self-canonical.
 const manual = JSON.parse(await readFile('data/manual-chapters.json', 'utf8'));
 const content = JSON.parse(await readFile('data/content.json', 'utf8'));
 const urls = new Map();
