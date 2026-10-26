@@ -52,7 +52,7 @@
         frame.title = 'Advertisement ' + id;
         frame.setAttribute('scrolling', 'auto');
         frame.setAttribute('referrerpolicy', 'unsafe-url');
-        frame.style.cssText = 'display:block;width:100%;max-width:100%;height:' + heightFor(code) + 'px;border:0;background:transparent;';
+        frame.style.cssText = 'display:block;width:100%;max-width:100%;height:' + (String(id) === 'social-bar-ads' ? 650 : heightFor(code)) + 'px;border:0;background:transparent;';
         box.appendChild(frame);
         try {
           var doc = frame.contentDocument || frame.contentWindow.document;
