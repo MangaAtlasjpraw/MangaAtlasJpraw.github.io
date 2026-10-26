@@ -81,9 +81,10 @@
               script.onload = function () { console.info('[JPMangaatlas Ads] Social Bar script loaded:', script.src); };
               script.onerror = function () { console.warn('[JPMangaatlas Ads] Social Bar script failed:', script.src); };
               script.src = node.src;
-              // Put provider scripts in the top-level document head, not inside the slot.
-              // Some providers look for document.head/currentScript and fail when nested in a div.
-              (document.body || document.documentElement).appendChild(script);
+              // Load Social Bar provider scripts in the document head. Some providers
+              // inspect the script's location/currentScript and fail when injected in body slots.
+              console.info('[JPMangaatlas Ads] Requesting Social Bar script:', script.src);
+              (document.head || document.documentElement).appendChild(script);
             } else {
               script.textContent = node.textContent;
               (document.body || document.documentElement).appendChild(script);
