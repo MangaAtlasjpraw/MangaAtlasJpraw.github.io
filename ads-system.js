@@ -83,10 +83,10 @@
               script.src = node.src;
               // Put provider scripts in the top-level document head, not inside the slot.
               // Some providers look for document.head/currentScript and fail when nested in a div.
-              (document.head || document.documentElement).appendChild(script);
+              (document.body || document.documentElement).appendChild(script);
             } else {
               script.textContent = node.textContent;
-              (document.head || document.documentElement).appendChild(script);
+              (document.body || document.documentElement).appendChild(script);
             }
           } else {
             (slot || document.body).appendChild(document.importNode(node, true));
