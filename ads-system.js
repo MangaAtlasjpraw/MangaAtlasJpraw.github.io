@@ -88,7 +88,7 @@
         var box = document.createElement('div');
         box.className = 'manga-atlas-ad-slot' + (social ? ' manga-atlas-social-bar-slot' : '');
         box.setAttribute('data-ma-ad-section', String(section.id || ''));
-        box.style.cssText = 'width:100%;min-height:' + (social ? '1px' : '90px') + ';margin:' + (social ? '0' : '20px auto') + ';display:flex;justify-content:center;align-items:flex-start;clear:both;overflow:visible;position:relative;z-index:' + (social ? '2147483000' : '1') + ';';
+        box.style.cssText = 'display:block;width:100%;min-height:' + (social ? '1px' : '90px') + ';margin:' + (social ? '0' : '20px auto') + ';padding:0;clear:both;overflow:visible;position:static;z-index:auto;';
         return box;
       }
       function place(section) {
@@ -117,7 +117,7 @@
           // ad from this same section isolated in its regular iframe slot.
           var split = splitSocialBarCode(code);
           if (split.social) {
-            executeInPage(split.social, document.body);
+            executeInPage(split.social, box);
             box.setAttribute('data-ma-socialbar-loaded', 'true');
           }
           if (split.regular.trim()) renderFrame(box, id, split.regular);
