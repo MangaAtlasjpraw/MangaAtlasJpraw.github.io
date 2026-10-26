@@ -68,50 +68,45 @@
         return Math.min(650, Math.max(250, height + 30));
       }
       function executeInPage(code, slot) {
-        // Keep Social Bar scripts in the top-level page and execute external scripts
-        // in their configured order. Continue after a failed URL so one blocked provider
-        // does not prevent the remaining Social Bar placements from being requested.
+        // Social-bar providers should all be requested independently. Loading these
+        // one-by-one can stall every later zone if a provider hangs without firing
+        // load/error, so start each external script immediately and continue on failure.
         var parsed = new DOMParser().parseFromString(String(code || ''), 'text/html');
         var nodes = Array.prototype.slice.call(parsed.body.childNodes);
-        var scripts = [];
+        var external = [];
+        var inline = [];
         nodes.forEach(function (node) {
           if (node.nodeType === 3 && !node.textContent.trim()) return;
           if (node.nodeName && node.nodeName.toLowerCase() === 'script') {
-            scripts.push(node);
+            if (node.getAttribute('src')) external.push(node);
+            else inline.push(node);
           } else {
             (slot || document.body).appendChild(document.importNode(node, true));
           }
         });
-        var external = scripts.filter(function (node) { return !!node.getAttribute('src'); });
-        var inline = scripts.filter(function (node) { return !node.getAttribute('src'); });
-        function loadExternal(index) {
-          if (index >= external.length) {
-            inline.forEach(function (node) {
-              var s = document.createElement('script');
-              Array.prototype.forEach.call(node.attributes, function (a) { s.setAttribute(a.name, a.value); });
-              s.textContent = node.textContent;
-              (document.head || document.documentElement).appendChild(s);
-            });
-            return;
-          }
-          var node = external[index];
-          var script = document.createElement('script');
-          Array.prototype.forEach.call(node.attributes, function (a) { script.setAttribute(a.name, a.value); });
-          script.async = false;
+        external.forEach(function (node) {
           var src = node.getAttribute('src');
+          var script = document.createElement('script');
+          Array.prototype.forEach.call(node.attributes, function (a) {
+            if (a.name.toLowerCase() !== 'src') script.setAttribute(a.name, a.value);
+          });
+          script.async = true;
           script.onload = function () {
             console.info('[JPMangaatlas Ads] Social Bar script loaded:', src);
-            loadExternal(index + 1);
           };
           script.onerror = function () {
             console.warn('[JPMangaatlas Ads] Social Bar script failed:', src);
-            loadExternal(index + 1);
           };
-          script.setAttribute('src', src);
+          script.src = src;
           console.info('[JPMangaatlas Ads] Requesting Social Bar script:', src);
           (document.head || document.documentElement).appendChild(script);
-        }
-        loadExternal(0);
+        });
+        inline.forEach(function (node) {
+          var script = document.createElement('script');
+          Array.prototype.forEach.call(node.attributes, function (a) { script.setAttribute(a.name, a.value); });
+          script.textContent = node.textContent;
+          (document.head || document.documentElement).appendChild(script);
+        });
       }
       function createSlot(section, social) {
         var box = document.createElement('div');
