@@ -95,7 +95,7 @@
         var id = String(section.id || '');
         if (!id || exists(id)) return true;
         var code = String(section.code || '');
-        var social = isSocialBar(code);
+        var social = id === 'social-bar-ads' || isSocialBar(code);
         var placement = String(section.placement || 'start').toLowerCase();
         var box = createSlot(section, social);
         if (placement === 'between') {
@@ -112,9 +112,13 @@
           if (placement === 'end') r.parentNode.insertBefore(box, r.nextSibling);
           else r.parentNode.insertBefore(box, r);
         }
-        if (social) {
-          // Run only the Social Bar script in the top-level page. Keep every other
-          // ad from this same section isolated in its regular iframe slot.
+        if (id === 'social-bar-ads') {
+          // This dedicated section contains the user's explicitly supplied stack of
+          // Social Bar scripts. Execute them in the top-level page, in order, rather
+          // than sandboxing them in an iframe where overlay providers may not work.
+          executeInPage(code, box);
+          box.setAttribute('data-ma-socialbar-loaded', 'true');
+        } else if (social) {
           var split = splitSocialBarCode(code);
           if (split.social) {
             executeInPage(split.social, box);
