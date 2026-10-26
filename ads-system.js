@@ -68,31 +68,50 @@
         return Math.min(650, Math.max(250, height + 30));
       }
       function executeInPage(code, slot) {
-        // Social-bar providers need the top-level document to create their fixed-position bar.
-        // Recreate script elements so the browser executes them; do not sandbox them in an iframe.
+        // Keep Social Bar scripts in the top-level page and execute external scripts
+        // in their configured order. Continue after a failed URL so one blocked provider
+        // does not prevent the remaining Social Bar placements from being requested.
         var parsed = new DOMParser().parseFromString(String(code || ''), 'text/html');
-        Array.prototype.forEach.call(parsed.body.childNodes, function (node) {
+        var nodes = Array.prototype.slice.call(parsed.body.childNodes);
+        var scripts = [];
+        nodes.forEach(function (node) {
           if (node.nodeType === 3 && !node.textContent.trim()) return;
-          if (node.nodeName.toLowerCase() === 'script') {
-            var script = document.createElement('script');
-            Array.prototype.forEach.call(node.attributes, function (a) { script.setAttribute(a.name, a.value); });
-            if (node.src) {
-              script.async = false;
-              script.onload = function () { console.info('[JPMangaatlas Ads] Social Bar script loaded:', script.src); };
-              script.onerror = function () { console.warn('[JPMangaatlas Ads] Social Bar script failed:', script.src); };
-              script.src = node.src;
-              // Load Social Bar provider scripts in the document head. Some providers
-              // inspect the script's location/currentScript and fail when injected in body slots.
-              console.info('[JPMangaatlas Ads] Requesting Social Bar script:', script.src);
-              (document.head || document.documentElement).appendChild(script);
-            } else {
-              script.textContent = node.textContent;
-              (document.body || document.documentElement).appendChild(script);
-            }
+          if (node.nodeName && node.nodeName.toLowerCase() === 'script') {
+            scripts.push(node);
           } else {
             (slot || document.body).appendChild(document.importNode(node, true));
           }
         });
+        var external = scripts.filter(function (node) { return !!node.getAttribute('src'); });
+        var inline = scripts.filter(function (node) { return !node.getAttribute('src'); });
+        function loadExternal(index) {
+          if (index >= external.length) {
+            inline.forEach(function (node) {
+              var s = document.createElement('script');
+              Array.prototype.forEach.call(node.attributes, function (a) { s.setAttribute(a.name, a.value); });
+              s.textContent = node.textContent;
+              (document.head || document.documentElement).appendChild(s);
+            });
+            return;
+          }
+          var node = external[index];
+          var script = document.createElement('script');
+          Array.prototype.forEach.call(node.attributes, function (a) { script.setAttribute(a.name, a.value); });
+          script.async = false;
+          var src = node.getAttribute('src');
+          script.onload = function () {
+            console.info('[JPMangaatlas Ads] Social Bar script loaded:', src);
+            loadExternal(index + 1);
+          };
+          script.onerror = function () {
+            console.warn('[JPMangaatlas Ads] Social Bar script failed:', src);
+            loadExternal(index + 1);
+          };
+          script.setAttribute('src', src);
+          console.info('[JPMangaatlas Ads] Requesting Social Bar script:', src);
+          (document.head || document.documentElement).appendChild(script);
+        }
+        loadExternal(0);
       }
       function createSlot(section, social) {
         var box = document.createElement('div');
