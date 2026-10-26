@@ -76,7 +76,7 @@
           if (node.nodeName.toLowerCase() === 'script') {
             var script = document.createElement('script');
             Array.prototype.forEach.call(node.attributes, function (a) { script.setAttribute(a.name, a.value); });
-            if (node.src) script.src = node.src;
+            if (node.src) { script.async = false; script.src = node.src; }
             else script.textContent = node.textContent;
             (slot || document.body).appendChild(script);
           } else {
