@@ -122,9 +122,11 @@
           else r.parentNode.insertBefore(box, r);
         }
         if (id === 'social-bar-ads') {
-          // Run the complete supplied script stack in an isolated document so
-          // provider scripts that depend on parser-time document.write can execute.
-          renderFrame(box, id, code);
+          // Social-bar providers commonly create fixed-position overlays on the
+          // top-level page; an iframe confines the overlay and leaves a blank box.
+          // Execute the supplied scripts in order in the page context instead.
+          executeInPage(code, box);
+          box.style.minHeight = '1px';
           box.setAttribute('data-ma-socialbar-loaded', 'true');
         } else if (social) {
           var split = splitSocialBarCode(code);
