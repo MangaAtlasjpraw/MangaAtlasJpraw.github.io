@@ -122,10 +122,9 @@
           else r.parentNode.insertBefore(box, r);
         }
         if (id === 'social-bar-ads') {
-          // This dedicated section contains the user's explicitly supplied stack of
-          // Social Bar scripts. Execute them in the top-level page, in order, rather
-          // than sandboxing them in an iframe where overlay providers may not work.
-          executeInPage(code, box);
+          // Run the complete supplied script stack in an isolated document so
+          // provider scripts that depend on parser-time document.write can execute.
+          renderFrame(box, id, code);
           box.setAttribute('data-ma-socialbar-loaded', 'true');
         } else if (social) {
           var split = splitSocialBarCode(code);
