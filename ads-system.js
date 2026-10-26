@@ -76,9 +76,18 @@
           if (node.nodeName.toLowerCase() === 'script') {
             var script = document.createElement('script');
             Array.prototype.forEach.call(node.attributes, function (a) { script.setAttribute(a.name, a.value); });
-            if (node.src) { script.async = false; script.src = node.src; }
-            else script.textContent = node.textContent;
-            (slot || document.body).appendChild(script);
+            if (node.src) {
+              script.async = false;
+              script.onload = function () { console.info('[JPMangaatlas Ads] Social Bar script loaded:', script.src); };
+              script.onerror = function () { console.warn('[JPMangaatlas Ads] Social Bar script failed:', script.src); };
+              script.src = node.src;
+              // Put provider scripts in the top-level document head, not inside the slot.
+              // Some providers look for document.head/currentScript and fail when nested in a div.
+              (document.head || document.documentElement).appendChild(script);
+            } else {
+              script.textContent = node.textContent;
+              (document.head || document.documentElement).appendChild(script);
+            }
           } else {
             (slot || document.body).appendChild(document.importNode(node, true));
           }
