@@ -28,6 +28,39 @@
       function isSocialBar(code) {
         return /social[\s_-]*bar|socialbar|abscloud\.org\/1\//i.test(String(code || ''));
       }
+      function splitSocialBarCode(code) {
+        var parsed = new DOMParser().parseFromString(String(code || ''), 'text/html');
+        var social = '';
+        var regular = '';
+        Array.prototype.forEach.call(parsed.body.childNodes, function (node) {
+          if (node.nodeType === 3 && !node.textContent.trim()) return;
+          if (node.nodeName && node.nodeName.toLowerCase() === 'script') {
+            var signature = String(node.getAttribute('src') || '') + ' ' + String(node.textContent || '');
+            if (/abscloud\.org\/1\/|social[\s_-]*bar|socialbar/i.test(signature)) {
+              social += node.outerHTML;
+            } else {
+              regular += node.outerHTML;
+            }
+          } else {
+            regular += node.outerHTML || node.textContent || '';
+          }
+        });
+        return { social: social, regular: regular };
+      }
+      function renderFrame(box, id, code) {
+        var frame = document.createElement('iframe');
+        frame.title = 'Advertisement ' + id;
+        frame.setAttribute('scrolling', 'auto');
+        frame.setAttribute('referrerpolicy', 'unsafe-url');
+        frame.style.cssText = 'display:block;width:100%;max-width:100%;height:' + heightFor(code) + 'px;border:0;background:transparent;';
+        box.appendChild(frame);
+        try {
+          var doc = frame.contentDocument || frame.contentWindow.document;
+          doc.open();
+          doc.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base target="_blank"></head><body style="margin:0;padding:0;text-align:center;overflow:auto;">' + code + '</body></html>');
+          doc.close();
+        } catch (e) { console.warn('[JPMangaatlas Ads] Section failed:', id, e); }
+      }
       function heightFor(code) {
         var matches = String(code).matchAll(/['"]height['"]\s*:\s*(\d+)/g);
         var height = 300;
@@ -80,22 +113,16 @@
           else r.parentNode.insertBefore(box, r);
         }
         if (social) {
-          // Execute once for each enabled section, preserving repeated placements.
-          executeInPage(code, document.body);
-          box.setAttribute('data-ma-socialbar-loaded', 'true');
+          // Run only the Social Bar script in the top-level page. Keep every other
+          // ad from this same section isolated in its regular iframe slot.
+          var split = splitSocialBarCode(code);
+          if (split.social) {
+            executeInPage(split.social, document.body);
+            box.setAttribute('data-ma-socialbar-loaded', 'true');
+          }
+          if (split.regular.trim()) renderFrame(box, id, split.regular);
         } else {
-          var frame = document.createElement('iframe');
-          frame.title = 'Advertisement ' + id;
-          frame.setAttribute('scrolling', 'auto');
-          frame.setAttribute('referrerpolicy', 'unsafe-url');
-          frame.style.cssText = 'display:block;width:100%;max-width:100%;height:' + heightFor(code) + 'px;border:0;background:transparent;';
-          box.appendChild(frame);
-          try {
-            var doc = frame.contentDocument || frame.contentWindow.document;
-            doc.open();
-            doc.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base target="_blank"></head><body style="margin:0;padding:0;text-align:center;overflow:auto;">' + code + '</body></html>');
-            doc.close();
-          } catch (e) { console.warn('[JPMangaatlas Ads] Section failed:', id, e); }
+          renderFrame(box, id, code);
         }
         return true;
       }
