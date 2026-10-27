@@ -65,9 +65,20 @@
       });
       script.text = oldScript.textContent || '';
       if (script.src) {
+        var src = script.src.toLowerCase();
+        var isInvoke = src.indexOf('highrevenueformat.com/') !== -1 && src.indexOf('/invoke.js') !== -1;
+        if (!isInvoke) {
+          // Start floating/social-bar provider scripts immediately in the top-level page.
+          // Never wait for a social-bar script's load event before activating the next one.
+          oldScript.parentNode.replaceChild(script, oldScript);
+          next(index + 1);
+          return;
+        }
+        // Keep each HighRevenueFormat invoke paired with the inline atOptions immediately
+        // before it; give this specific script time to read its configuration.
         script.async = false;
         var advanced = false;
-        var timer = setTimeout(advance, 5000);
+        var timer = setTimeout(advance, 8000);
         function advance() {
           if (advanced) return;
           advanced = true;
