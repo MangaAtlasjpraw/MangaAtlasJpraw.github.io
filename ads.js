@@ -1,1 +1,1 @@
-/* Legacy ads loader retained from the supplied ZIP; the active loader is ads-system.js. */
+/* MangaAtlas legacy Ads loader disabled. Ads are removed site-wide. */
