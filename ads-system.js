@@ -71,7 +71,7 @@
   }
 
   function readDimension(text, name, fallback) {
-    var match = String(text).match(new RegExp('(?:[\\'"]?' + name + '[\\'"]?)\\s*:\\s*[\\'"]?(\\d+)', 'i'));
+    var match = String(text).match(new RegExp("(?:['\\"]?" + name + "['\\"]?)\\s*:\\s*['\\"]?(\\d+)", "i"));
     return match ? Math.max(50, Math.min(1000, parseInt(match[1], 10))) : fallback;
   }
 
