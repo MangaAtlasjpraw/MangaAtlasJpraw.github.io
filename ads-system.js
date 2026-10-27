@@ -1,4 +1,4 @@
-/* MangaAtlas Ads System — run provider scripts in the page context so floating/social-bar ads can stay viewport-fixed. */
+/* MangaAtlas Ads System — page-context social bars plus bounded script waits to prevent one provider stalling the rest. */
 (function () {
   'use strict';
   if (location.pathname.indexOf('/admin') === 0 || window.__mangaAtlasAdsSystemLoaded) return;
@@ -51,6 +51,8 @@
 
   // Recreate script elements in the actual page, not in an iframe. Floating/social-bar
   // providers need the top-level document/window to position themselves during scrolling.
+  // Bound each script wait so one provider that never fires load/error does not stall
+  // all later placements in the same section for several seconds.
   function activateScripts(slot) {
     var list = Array.prototype.slice.call(slot.querySelectorAll('script'));
     function next(index) {
@@ -65,7 +67,7 @@
       if (script.src) {
         script.async = false;
         var advanced = false;
-        var timer = setTimeout(advance, 5000);
+        var timer = setTimeout(advance, 1800);
         function advance() {
           if (advanced) return;
           advanced = true;
