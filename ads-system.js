@@ -67,7 +67,7 @@
       if (script.src) {
         script.async = false;
         var advanced = false;
-        var timer = setTimeout(advance, 1800);
+        var timer = setTimeout(advance, 5000);
         function advance() {
           if (advanced) return;
           advanced = true;
