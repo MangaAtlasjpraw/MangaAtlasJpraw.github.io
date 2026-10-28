@@ -34,12 +34,13 @@
   function loadAdsSystem(){
     if(location.pathname.indexOf('/admin')===0)return;
     if(document.querySelector('script[data-manga-atlas-ads]'))return;
-    var s=document.createElement('script');s.src='/ads-system.js?v=24';s.async=false;s.setAttribute('data-manga-atlas-ads','true');document.head.appendChild(s);
+    var s=document.createElement('script');s.src='/ads-system.js?v=25';s.async=false;s.setAttribute('data-manga-atlas-ads','true');document.head.appendChild(s);
   }
 
   function init() {
-    function bootAds(){loadAdsSystem();}
-    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootAds,{once:true});else bootAds();
+    // Start fetching the ad configuration immediately; ads-system.js handles
+    // waiting for DOMContentLoaded before inserting reader placements.
+    loadAdsSystem();
     window.dataLayer = window.dataLayer || [];
     window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
 
