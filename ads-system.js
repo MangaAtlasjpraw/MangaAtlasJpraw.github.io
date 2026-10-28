@@ -129,9 +129,15 @@
       var images = Array.prototype.slice.call(pages.querySelectorAll('img.page'));
       var n = parseInt(section.afterImage != null ? section.afterImage : section.between, 10);
       if (!Number.isFinite(n) || n < 1) n = 5;
-      if (images.length < n || !images[n - 1].parentNode) return false;
+      // If a chapter has fewer images than the configured target (e.g. a
+      // single-image chapter), do not silently drop the placement. Attach it
+      // after the last available image so every enabled section can render.
+      if (!images.length) return false;
+      var anchorIndex = Math.min(n, images.length);
+      var anchorImage = images[anchorIndex - 1];
+      if (!anchorImage || !anchorImage.parentNode) return false;
       slot = createSlot(section);
-      images[n - 1].parentNode.insertBefore(slot, images[n - 1].nextSibling);
+      anchorImage.parentNode.insertBefore(slot, anchorImage.nextSibling);
       activateScripts(slot);
       return true;
     }
