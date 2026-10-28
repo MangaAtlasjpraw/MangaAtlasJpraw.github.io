@@ -55,41 +55,58 @@
   // all later placements in the same section for several seconds.
   function activateScripts(slot) {
     var list = Array.prototype.slice.call(slot.querySelectorAll('script'));
+
+    function makeBannerFrame(configScript, invokeScript) {
+      var source = invokeScript.src;
+      var config = configScript.textContent || '';
+      var widthMatch = config.match(/['"]width['"]\s*:\s*(\d+)/i);
+      var heightMatch = config.match(/['"]height['"]\s*:\s*(\d+)/i);
+      var width = widthMatch ? parseInt(widthMatch[1], 10) : 300;
+      var height = heightMatch ? parseInt(heightMatch[1], 10) : 250;
+      var frame = document.createElement('iframe');
+      frame.title = 'Advertisement';
+      frame.loading = 'lazy';
+      frame.width = String(width);
+      frame.height = String(height);
+      frame.setAttribute('aria-label', 'Advertisement');
+      frame.style.cssText = 'display:block;border:0;max-width:100%;margin:0 auto;overflow:hidden;';
+      // Adsterra-style invoke.js uses the global atOptions object and may rely on
+      // parser-time document.write. Run each banner pair in its own document so
+      // multiple banners cannot overwrite one another's atOptions configuration.
+      frame.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;padding:0;width:100%;overflow:hidden;background:transparent}body{display:flex;justify-content:center;align-items:flex-start}</style></head><body><script>' +
+        config.replace(/<\/script/gi, '<\\/script') +
+        '<\/script><script src="' + source.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"><\/script></body></html>';
+      return frame;
+    }
+
     function next(index) {
       if (index >= list.length) return;
       var oldScript = list[index];
       if (!oldScript.parentNode) { next(index + 1); return; }
+
+      var following = list[index + 1];
+      var configText = oldScript.textContent || '';
+      if (!oldScript.src && /\batOptions\s*=/.test(configText) &&
+          following && following.parentNode === oldScript.parentNode &&
+          following.src && /highrevenueformat\.com\/[^/]+\/invoke\.js/i.test(following.src)) {
+        var frame = makeBannerFrame(oldScript, following);
+        oldScript.parentNode.replaceChild(frame, oldScript);
+        if (following.parentNode) following.parentNode.removeChild(following);
+        next(index + 2);
+        return;
+      }
+
       var script = document.createElement('script');
       Array.prototype.slice.call(oldScript.attributes).forEach(function (attribute) {
         script.setAttribute(attribute.name, attribute.value);
       });
-      script.text = oldScript.textContent || '';
+      script.text = configText;
+
       if (script.src) {
-        var src = script.src.toLowerCase();
-        var isInvoke = src.indexOf('highrevenueformat.com/') !== -1 && src.indexOf('/invoke.js') !== -1;
-        if (!isInvoke) {
-          // Start floating/social-bar provider scripts immediately in the top-level page.
-          // Never wait for a social-bar script's load event before activating the next one.
-          oldScript.parentNode.replaceChild(script, oldScript);
-          next(index + 1);
-          return;
-        }
-        // Keep each HighRevenueFormat invoke paired with the inline atOptions immediately
-        // before it; give this specific script time to read its configuration.
-        script.async = false;
-        var advanced = false;
-        var timer = setTimeout(advance, 8000);
-        function advance() {
-          if (advanced) return;
-          advanced = true;
-          clearTimeout(timer);
-          script.onload = null;
-          script.onerror = null;
-          next(index + 1);
-        }
-        script.onload = advance;
-        script.onerror = advance;
+        // Social-bar scripts stay in the top-level document so their floating
+        // UI can position itself against the page while the user scrolls.
         oldScript.parentNode.replaceChild(script, oldScript);
+        next(index + 1);
       } else {
         oldScript.parentNode.replaceChild(script, oldScript);
         next(index + 1);
