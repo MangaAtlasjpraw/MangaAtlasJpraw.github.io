@@ -7,6 +7,19 @@
   var sections = [];
   var observer = null;
   var tries = 0;
+  var globalProviderScripts = Object.create(null);
+
+  // Floating/social-bar provider scripts must execute in the top-level page,
+  // not inside a chapter ad slot. Load each distinct zone script once globally.
+  function loadGlobalProviderScript(src) {
+    if (!src || globalProviderScripts[src]) return;
+    globalProviderScripts[src] = true;
+    var script = document.createElement('script');
+    script.src = src;
+    script.async = true;
+    script.setAttribute('data-ma-global-provider', 'true');
+    (document.head || document.documentElement).appendChild(script);
+  }
 
   function readConfig() {
     return fetch('/data/ads-config.json?v=' + Date.now(), { cache: 'no-store' })
@@ -103,9 +116,14 @@
       script.text = configText;
 
       if (script.src) {
-        // Social-bar scripts stay in the top-level document so their floating
-        // UI can position itself against the page while the user scrolls.
-        oldScript.parentNode.replaceChild(script, oldScript);
+        // Social bars use the page viewport and should not be initialized as
+        // children of a reader slot. Repeated zone URLs are loaded only once.
+        if (/^https?:\/\/bauval\.org\//i.test(script.src)) {
+          loadGlobalProviderScript(script.src);
+          oldScript.parentNode.removeChild(oldScript);
+        } else {
+          oldScript.parentNode.replaceChild(script, oldScript);
+        }
         next(index + 1);
       } else {
         oldScript.parentNode.replaceChild(script, oldScript);
