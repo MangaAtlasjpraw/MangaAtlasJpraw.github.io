@@ -74,8 +74,8 @@
       // parser-time document.write. Run each banner pair in its own document so
       // multiple banners cannot overwrite one another's atOptions configuration.
       frame.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;padding:0;width:100%;overflow:hidden;background:transparent}body{display:flex;justify-content:center;align-items:flex-start}</style></head><body><script>' +
-        config.replace(/<\/script/gi, '<\\/script') +
-        '<\/script><script src="' + source.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"><\/script></body></html>';
+        config +
+        '</scr' + 'ipt><script src="' + source.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"></scr' + 'ipt></body></html>'
       return frame;
     }
 
