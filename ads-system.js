@@ -22,33 +22,8 @@
     : [];
   if (!sections.length) return;
 
-  // Provider-wide scripts are loaded once even if several sections contain the same URL.
-  var globalSocialScripts = [];
-  var globalSocialSeen = new Set();
-  sections.forEach(function (section) {
-    section.code = String(section.code || '').replace(
-      /<script\b[^>]*\bsrc\s*=\s*(['"])(https?:\/\/bauval\.org\/14\/[^'"]+)\1[^>]*>\s*<\/script\s*>/gi,
-      function (tag, quote, src) {
-        if (!globalSocialSeen.has(src)) {
-          globalSocialSeen.add(src);
-          globalSocialScripts.push(src);
-        }
-        return '';
-      }
-    );
-  });
-
-  function loadGlobalSocialScripts() {
-    globalSocialScripts.forEach(function (src) {
-      if (document.querySelector('script[data-ma-social-src="' + src.replace(/"/g, '\\"') + '"]')) return;
-      var script = document.createElement('script');
-      script.setAttribute('data-ma-social-src', src);
-      script.async = true;
-      script.src = src;
-      (document.body || document.documentElement).appendChild(script);
-    });
-  }
-
+  // Keep each social-bar script inside its configured section. Global deduplication
+  // breaks placement-based formats because providers attach to the current document/slot.
   function executeIsolated(code, id) {
     var box = document.createElement('div');
     box.className = 'manga-atlas-ad-slot';
@@ -159,7 +134,10 @@
       var images = Array.prototype.slice.call(pages.querySelectorAll('img.page'));
       var number = parseInt(section.afterImage != null ? section.afterImage : section.between, 10);
       if (!Number.isFinite(number) || number < 1) number = 5;
-      if (images.length < number) return false;
+      // If a chapter has fewer images than the configured target, place the ad
+      // after the last available page instead of silently dropping this section.
+      if (!images.length) return false;
+      number = Math.min(number, images.length);
       box = executeIsolated(section.code, id);
       images[number - 1].parentNode.insertBefore(box, images[number - 1].nextSibling);
       activateScripts(box);
@@ -198,7 +176,6 @@
   var observer = new MutationObserver(install);
   if (document.body) observer.observe(document.body, { childList: true, subtree: true });
   function startAds() {
-    loadGlobalSocialScripts();
     install();
   }
   if (document.readyState === 'loading') {
